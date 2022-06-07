@@ -1,0 +1,45 @@
+{% if settings.siteId %}
+<script>
+    <!-- Hotjar Tracking Code for {{network.domain}} -->
+    (function(h,o,t,j,a,r){
+        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+        h._hjSettings={hjid:{{ settings.siteId }},hjsv:6};
+        a=o.getElementsByTagName('head')[0];
+        r=o.createElement('script');r.async=1;
+        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+        a.appendChild(r);
+    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+    <!-- End of Hotjar Tracking Code -->
+{% if settings.memberIdentity %}
+    (function(){
+        var memberIdentity = {{ settings.memberIdentity }}
+        if(memberIdentity.enabled){
+            var identifier = memberIdentity.identifier === 'externalId' ? '{{ member.externalId | default: member.id }}' : '{{ member.id }}';
+            var prefix =  memberIdentity.prefix || 'Community'
+            var options = {}
+            options[prefix + ' ID'] = '{{ member.id }}'
+            options[prefix + ' External ID'] = '{{ member.externalId }}'
+            options[prefix + ' Role'] = '{{ role.type }}'
+            options[prefix + ' Locale'] = '{{ member.locale }}'
+            options[prefix + ' Created At'] = '{{ member.createdAt }}'
+            window.hj('identify', identifier, options);
+        }
+    })();
+{% endif %}
+{% if settings.events %}
+    (function(){
+        var events = {{settings.events}}
+        if(events && events.frontend && events.frontend.enabled){
+            window.hj=window.hj||function(){(hj.q=hj.q||[]).push(arguments)};
+            document.addEventListener("DOMContentLoaded", function(){
+                setTimeout(function(){
+                    window.Tribe.on('event', function (event){
+                        window.hj('event',event.noun + '_' + event.verb)
+                    })
+                },2000)
+            });
+        }
+    })();
+{% endif %}
+</script>
+{% endif %}
