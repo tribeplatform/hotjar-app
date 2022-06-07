@@ -4,6 +4,7 @@ import { Types } from '@tribeplatform/gql-client';
 import { logger } from '@/utils/logger';
 
 const DEFAULT_SETTINGS = {}
+const SITE_ID_REGEX = /^([0-9]+)$/
 
 class WebhookController {
   public index = async (req: Request, res: Response, next: NextFunction) => {
@@ -80,6 +81,21 @@ class WebhookController {
    * TODO: Elaborate on this function
    */
   private async updateSettings(input) {
+    if (!input.data.settings?.siteId) {
+      return {
+        type: input.type,
+        status: 'FAILED',
+        errorCode: 112,
+        errorMessage: `Missing required parameter siteId.`,
+      }
+    } else if (!SITE_ID_REGEX.test(input.data.settings?.siteId)) {
+      return {
+        type: input.type,
+        status: 'FAILED',
+        errorCode: 106,
+        errorMessage: `Site ID is in an invalid format.`,
+      }
+    }
     return {
       type: input.type,
       status: 'SUCCEEDED',
