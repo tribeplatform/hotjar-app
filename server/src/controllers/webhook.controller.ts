@@ -1,12 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { Types } from '@tribeplatform/gql-client';
-import { logger } from '@/utils/logger';
+import { createLogger } from '@/utils/logger';
+import { Logger } from '@tribeplatform/node-logger';
 
 const DEFAULT_SETTINGS = {}
 const SITE_ID_REGEX = /^([0-9]+)$/
 
 class WebhookController {
+  private readonly logger: Logger
+  constructor(){
+    this.logger = createLogger(WebhookController.name)
+  }
   public index = async (req: Request, res: Response, next: NextFunction) => {
     const input = req.body;
     try {
@@ -24,7 +29,12 @@ class WebhookController {
         status: 'SUCCEEDED',
         data: {},
       };
-
+      this.logger.log(`Incoming webhook ${JSON.stringify(input)}`, {
+        network: input?.networkId,
+        context: input?.context,
+        type: input?.type,
+        actor: input?.actor?.id,
+      })
       switch (input.type) {
         case 'GET_SETTINGS':
           result = await this.getSettings(input);
@@ -38,7 +48,7 @@ class WebhookController {
       }
       res.status(200).json(result);
     } catch (error) {
-      logger.error(error);
+      this.logger.error(error);
       return {
         type: input.type,
         status: 'FAILED',
